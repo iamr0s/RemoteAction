@@ -1,0 +1,39 @@
+name: lavender
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout kernel source
+      uses: actions/checkout@v2
+
+    - name: Load Kernel Repo
+      run: |
+        git clone https://github.com/stormbreaker-project/kernel_xiaomi_lavender.git --depth 1 kernel_source
+        mv kernel_source/* ./
+
+    - name: Checkout zipper
+      uses: actions/checkout@v2
+      with:
+        repository: lemniskett/AnyKernel3
+        path: zipper
+
+    - name: Android kernel build
+      uses: lemniskett/android-kernel-actions@master
+      id: build
+      env:
+        NAME: lavender
+      with:
+        arch: arm64
+        compiler: gcc/9
+        defconfig: lavender_defconfig
+        image: Image.gz-dtb
+
+    - name: Release build
+      uses: ncipollo/release-action@v1
+      with:
+        artifacts: ${{ steps.build.outputs.outfile }}
+        token: ${{ secrets.GITHUB_TOKEN }}
